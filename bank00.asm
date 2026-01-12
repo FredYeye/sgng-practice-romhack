@@ -1096,16 +1096,25 @@ _008B05:
     dw $7FFF
 }
 
-{ ;8C90 - A2FF
-if !version == 0
-    fillbyte $FF : fill 5744
-elseif !version == 1 || !version == 2
-    incbin "fill_bytes/eng/bank00b.bin"
-endif
-}
+{ ;8C90 - A2FF custom loc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+} 
 
 { ;A300 - A308
-_00A300: dl $7EF400, $7F9E00, $7F9800
+org $00A300 : _00A300: dl $7EF400, $7F9E00, $7F9800
 }
 
 { ;A309 - A316
