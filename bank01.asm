@@ -6112,6 +6112,12 @@ _01AF04: ;a8 x8
 
 { ;B14B - B19C
 _01B14B: ;a8 x8
+    lda.b #$01
+    bit.w ram.flags
+    beq +
+
+    jsr display_arthur_x_pos
++:
     lda $1FB9
     bne .ret
 
@@ -6136,11 +6142,15 @@ _01B14B: ;a8 x8
     tax
     bne .B16A
 
+    jsr setup_pause_menu
 .B17A:
+    jsr run_custom_menu
     lda #$01 : jsl _01A717_A728
     lda.w p1_button_press+1 ;unpause check
     bit #!start
     beq .B17A
+
+    jsr restore_pause_menu
 
     lda #$F4 : jsl _018049_8053
     ldx #$18
@@ -14101,6 +14111,175 @@ _01F722: ;a8 x8
     !A16
     lda.w _00BD0B+1,X : sta $06
     !A8
+    rts
+}
+
+{ ;F783 - FEFF custom loc, 1398 bytes
+setup_pause_menu:
+    ;backup hud
+    !AX16
+    ldx #$0200-2
+-:
+    lda.l _7F9000,X : sta.l $7FFE00,X
+    lda.w #$01C5    : sta.l _7F9000,X
+    dex #2 : bpl -
+
+    ;draw menu text
+    ldy.w #0  ;string offset
+    lda.w #$0000-$40 : sta.b $00 ;base drawing offset
+.next_text:
+    iny #2
+    lda.b $00 : clc : adc #$0040 : sta.b $00 ;increment base drawing offset
+    cmp.w #$40*4
+    bcs .done
+
+    tax
+    lda.w menu_text-2,Y
+    bmi .done
+    bra .start_load
+
+.load_next:
+    lda.w menu_text-2,Y
+    bmi .next_text
+
+.start_load:
+    sta.l _7F9000+$44,X
+    inx #2
+    iny #2
+    bra .load_next
+
+.done:
+    ldx.w ram.cursor_pos
+    lda.w #$21AB : sta.l _7F9000+$42,X
+    !AX8
+    inc.w layer3_needs_update
+.ret:
+    rts
+
+;-----
+
+run_custom_menu:
+    !AX16
+    lda.w p1_button_press
+    bit.w #!up<<8
+    beq +
+
+    ldx.w ram.cursor_pos
+    beq setup_pause_menu_ret
+
+    lda #$01C5 : sta.l _7F9000+$42,X ;clear previous cursor pos
+    txa : sec : sbc #$0040 : tax
+    sta.w ram.cursor_pos
+    lda #$21AB : sta.l _7F9000+$42,X ;add cursor to new pos
+    inc.w layer3_needs_update
+    bra .ret
+
++:
+    bit.w #!down<<8
+    beq +
+
+    !AX16
+    ldx.w ram.cursor_pos
+    cpx.w #$00C0
+    bcs .ret
+
+    lda #$01C5 : sta.l _7F9000+$42,X ;clear previous cursor pos
+    txa : clc : adc #$0040 : tax
+    sta.w ram.cursor_pos
+    lda #$21AB : sta.l _7F9000+$42,X ;add cursor to new pos
+    inc.w layer3_needs_update
+    bra .ret
+
++:
+    bit.w #!b<<8
+    beq .ret
+
+    lda.w ram.cursor_pos : asl : xba : tax
+    !AX8
+    jmp (+,X) : +: dw .show_pos
+
+.show_pos:
+    lda.w ram.flags
+    bit.b #1
+    beq .was_unset
+
+    !A16
+    lda.w #$01C5
+    ;clear xpos from hud
+    ldx.b #8
+-:
+    sta.l $7FFE00+$94-2,X
+    dex #2
+    bpl -
+
+    ;clear ypos from hud
+    ldx.b #8
+-:
+    sta.l $7FFE00+$D4-2,X
+    dex #2
+    bpl -
+
+    !A8
+    bra +
+
+.was_unset:
+    !A16
+    lda.w #$21A1 : sta.l $7FFE00+$92 ;'X'
+    lda.w #$21A2 : sta.l $7FFE00+$D2 ;'Y'
+    !A8
++:
+    lda.w ram.flags : eor.b #1 : sta.w ram.flags
+.ret:
+    !AX8
+    rts
+
+;-----
+
+restore_pause_menu:
+    ;restore hud
+    !AX16
+    ldx #$0200-2
+-:
+    lda.l $7FFE00,X : sta.l _7F9000,X
+    dex #2 : bpl -
+
+    !AX8
+    inc.w layer3_needs_update
+    rts
+
+;-----
+
+display_arthur_x_pos:
+    !A16
+    ldx.b #6
+    lda.w !obj_arthur.pos_x
+    bra +
+
+-:
+    lsr #4
++:
+    pha
+    and.w #$000F : ora.w #$2180 : sta.l _7F9000+$94,X
+    pla
+    dex #2
+    bpl -
+
+    ;copy paste for Y
+    ldx.b #6
+    lda.w !obj_arthur.pos_y
+    bra +
+
+-:
+    lsr #4
++:
+    pha
+    and.w #$000F : ora.w #$2180 : sta.l _7F9000+$D4,X
+    pla
+    dex #2
+    bpl -
+
+    !A8
+    inc.w layer3_needs_update
     rts
 }
 

@@ -148,6 +148,14 @@
         .stage_checkpoint: skip 1
     endstruct
 
+    ;$1FDE;$1FE8 options related
+    ;$1FEF
+
+    struct ram $1FF0;$1FFF
+        .cursor_pos: skip 2
+        .flags: skip 1
+    endstruct
+
     ;7E2000                 ;meta sprite offsets
     ;7E2300                 ;meta sprite definitions
     ;7EB000;$EFFF           ;tile array, indexes into tile shape array
