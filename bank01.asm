@@ -576,6 +576,7 @@ call_rng: ;a8 x-
     clc
     adc.w rng_state+1
     sta.w rng_state+1
+    inc.w ram.rng_counter
     rtl
 }
 
@@ -14128,36 +14129,47 @@ setup_pause_menu:
     lda.w #$01C5    : sta.l _7F9000,X
     dex #2 : bpl -
 
-    ;draw menu text
-    ldy.w #0  ;string offset
-    lda.w #$0000-$40 : sta.b $00 ;base drawing offset
-.next_text:
-    iny #2
-    lda.b $00 : clc : adc #$0040 : sta.b $00 ;increment base drawing offset
-    cmp.w #$40*4
-    bcs .done
-
-    tax
-    lda.w menu_text-2,Y
-    bmi .done
-    bra .start_load
-
-.load_next:
-    lda.w menu_text-2,Y
-    bmi .next_text
-
-.start_load:
-    sta.l _7F9000+$44,X
-    inx #2
-    iny #2
-    bra .load_next
-
-.done:
+    jsr draw_menu_text
+    jsr draw_menu_options
     ldx.w ram.cursor_pos
     lda.w #$21AB : sta.l _7F9000+$42,X
     !AX8
     inc.w layer3_needs_update
 .ret:
+    rts
+
+;-----
+
+draw_menu_text:
+    ldy.w #-1  ;string offset
+    lda.w #$0000-$40 : sta.b $00 ;base drawing offset
+.next_text:
+    iny
+    lda.b $00 : clc : adc #$0040 : sta.b $00 ;increment base drawing offset
+    cmp.w #$40*4
+    bcs .done
+
+    tax
+    lda.w menu_name,Y : and.w #$FF
+    cmp.w #$FF : beq .done
+    bra .start_load
+
+.load_next:
+    lda.w menu_name,Y : and.w #$FF
+    cmp.w #$FF : beq .next_text
+
+.start_load:
+    ora.w #$2180 : sta.l _7F9000+$44,X
+    inx #2
+    iny
+    bra .load_next
+
+.done:
+    rts
+
+;-----
+
+draw_menu_options:
     rts
 
 ;-----

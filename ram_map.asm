@@ -154,6 +154,7 @@
     struct ram $1FF0;$1FFF
         .cursor_pos: skip 2
         .flags: skip 1
+        .rng_counter: skip 2
     endstruct
 
     ;7E2000                 ;meta sprite offsets
