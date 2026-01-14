@@ -6112,12 +6112,16 @@ _01AF04: ;a8 x8
 
 { ;B14B - B19C
 _01B14B: ;a8 x8
-    lda.b #$01
-    bit.w ram.flags
-    beq +
+    lda.w ram.flags
+    bit.b #1 : beq +
 
-    jsr display_arthur_x_pos
+    pha : jsr display_arthur_pos : pla
 +:
+    bit.b #2 : beq +
+
+    jsr display_rng
++:
+
     lda $1FB9
     bne .ret
 
@@ -6144,7 +6148,7 @@ _01B14B: ;a8 x8
 
     jsr setup_pause_menu
 .B17A:
-    jsr run_custom_menu
+    jsr run_custom_menu : !AX8
     lda #$01 : jsl _01A717_A728
     lda.w p1_button_press+1 ;unpause check
     bit #!start
@@ -14161,9 +14165,23 @@ setup_pause_menu:
 run_custom_menu:
     !AX16
     lda.w p1_button_press
-    bit.w #!up<<8
-    beq +
+    bit.w #!up<<8 : beq +
 
+    jmp .up
++:
+    bit.w #!down<<8 : beq +
+
+    jmp .down
++:
+    bit.w #!b<<8 : beq +
+
+    jmp .b
++:
+    rts
+
+;-----
+
+.up:
     ldx.w ram.cursor_pos
     beq setup_pause_menu_ret
 
@@ -14172,36 +14190,34 @@ run_custom_menu:
     sta.w ram.cursor_pos
     lda #$21AB : sta.l _7F9000+$42,X ;add cursor to new pos
     inc.w layer3_needs_update
-    bra .ret
+    rts
 
-+:
-    bit.w #!down<<8
-    beq +
+;-----
 
-    !AX16
+.down:
     ldx.w ram.cursor_pos
-    cpx.w #$00C0
-    bcs .ret
+    cpx.w #$40*1
+    bcs ..ret
 
     lda #$01C5 : sta.l _7F9000+$42,X ;clear previous cursor pos
     txa : clc : adc #$0040 : tax
     sta.w ram.cursor_pos
     lda #$21AB : sta.l _7F9000+$42,X ;add cursor to new pos
     inc.w layer3_needs_update
-    bra .ret
+..ret:
+    rts
 
-+:
-    bit.w #!b<<8
-    beq .ret
+;-----
 
-    lda.w ram.cursor_pos : asl : xba : tax
+.b:
+    lda.w ram.cursor_pos : asl #3 : xba : tax
     !AX8
-    jmp (+,X) : +: dw .show_pos
+    jmp (+,X) : +: dw .show_pos, .show_rng
 
 .show_pos:
     lda.w ram.flags
     bit.b #1
-    beq .was_unset
+    beq ..was_unset
 
     !A16
     lda.w #$01C5
@@ -14222,15 +14238,32 @@ run_custom_menu:
     !A8
     bra +
 
-.was_unset:
+..was_unset:
     !A16
     lda.w #$21A1 : sta.l $7FFE00+$92 ;'X'
     lda.w #$21A2 : sta.l $7FFE00+$D2 ;'Y'
     !A8
 +:
     lda.w ram.flags : eor.b #1 : sta.w ram.flags
-.ret:
+    rts
+
+;-----
+
+.show_rng:
+    lda.w ram.flags
+    bit.b #2
+    beq ..was_unset
+
+    !A16
+    lda.w #$01C5
+    ldx.b #6
+-:
+    sta.l $7FFE00+$A4,X
+    dex #2 : bpl -
+
     !AX8
+..was_unset:
+    lda.w ram.flags : eor.b #2 : sta.w ram.flags
     rts
 
 ;-----
@@ -14249,7 +14282,7 @@ restore_pause_menu:
 
 ;-----
 
-display_arthur_x_pos:
+display_arthur_pos:
     !A16
     ldx.b #6
     lda.w !obj_arthur.pos_x
@@ -14274,6 +14307,27 @@ display_arthur_x_pos:
 +:
     pha
     and.w #$000F : ora.w #$2180 : sta.l _7F9000+$D4,X
+    pla
+    dex #2
+    bpl -
+
+    !A8
+    inc.w layer3_needs_update
+    rts
+
+;-----
+
+display_rng:
+    !A16
+    ldx.b #6
+    lda.w rng_state
+    bra +
+
+-:
+    lsr #4
++:
+    pha
+    and.w #$000F : ora.w #$2180 : sta.l _7F9000+$A4,X
     pla
     dex #2
     bpl -

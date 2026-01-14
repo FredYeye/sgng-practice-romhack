@@ -1122,9 +1122,9 @@ _008B05:
 menu_text:
     dw "SHOW POS", -1
     dw "SHOW RNG", -1
-    dw "DO STUFF", -1
-    dw "TEST", -1
-    dw "COOL FEATURE", -1
+    ;dw "DO STUFF", -1
+    ;dw "TEST", -1
+    ;dw "COOL FEATURE", -1
     dw -1
 
 cleartable
