@@ -1126,10 +1126,13 @@ menu:
     db "SHOW RNG", -1
     db -1
 
-.setting:
-    db "OFF", -1, "ON", -1,
-    db "OFF", -1, "STATE", -1, "COUNTER", -1,
-    db -1
+.show_pos_settings: dw -1, .off, .on, -1
+.show_rng_settings: dw -1, .off, .state, .counter, -1
+
+.off:     db "OFF", -1
+.on:      db "ON", -1
+.state:   db "STATE", -1
+.counter: db "COUNTER", -1
 
 cleartable
 } 

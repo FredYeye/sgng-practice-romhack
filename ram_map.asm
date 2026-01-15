@@ -152,7 +152,7 @@
     ;$1FEF
 
     struct ram $1FF0;$1FFF
-        .cursor_pos: skip 2
+        .cursor_pos: skip 1
         .flags: skip 1
         .rng_counter: skip 2
     endstruct
