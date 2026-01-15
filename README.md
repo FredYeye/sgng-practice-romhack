@@ -1,6 +1,9 @@
 # Super Ghouls 'n Ghosts Practice Hack
 Very unfinished. Current capabilities:
 - Show Arthur's X & Y position
-- Show current RNG state
+- Show current RNG state or how many times the RNG has been updated
 
-Press start to open the menu. Press B to toggle features.
+Start opens the menu. Up and down chooses option, right chooses the mode for the selected option.
+
+Todo:
+- menu indicators
