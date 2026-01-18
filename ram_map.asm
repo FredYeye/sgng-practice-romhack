@@ -72,12 +72,12 @@
     hud_update_timer         = $0370
     hud_flicker_timer        = $0373
 
-    obj_start = $043C;$11B0
+    obj_start = $043C;11B0
 
     ;13D1 ;active object count lists? create struct here maybe 
 
-    slot_list_objects = $13F1;$142E ;list of 16 bit indices for slot_objects
-    slot_list_weapons = $142F;$1442
+    slot_list_objects = $13F1;142E ;list of 16 bit indices for slot_objects
+    slot_list_weapons = $142F;1442
     open_object_slots = $1443
     open_weapon_slots = $1445
     open_magic_slots  = $1447
@@ -125,9 +125,11 @@
 
     ; $1EE8 ;distance from left screen edge arthur needs to reach to scroll the screen, 2 bytes
 
+    ; $1F2F bool
+
     bowgun_magic_active = $1F98 ;todo: rename to "on_raft" or similar? or even raft+bowgun
 
-    struct pot $1FA5;$1FAC
+    struct pot $1FA5;1FAC
         .enemy_counter:      skip 1 ;spawned enemies that can carry pot
         .counter:            skip 1 ;total pots spawned
         .weapon_req:         skip 1 ;required pot count to drop weapon
@@ -138,9 +140,11 @@
         .point_statue_count: skip 1
     endstruct
 
+    ;$1FAD used by cockatrice_head2
+    ;$1FAF used by icicle spawner / other stage 5 things
     ;$1FD8 unused?
 
-    struct options $1FD9;$1FDD
+    struct options $1FD9;1FDD
         .difficulty:       skip 1
         .controls:         skip 1
         .extra_lives:      skip 1
@@ -148,21 +152,21 @@
         .stage_checkpoint: skip 1
     endstruct
 
-    ;$1FDE;$1FE8 options related
+    ;$1FDE;1FE8 options related
     ;$1FEF
+    ;$1FF0;1FFF unused?
 
-    struct ram $1FF0;$1FFF
-        .cursor_pos: skip 1
-        .flags: skip 1
-        .rng_counter: skip 2
-    endstruct
+    ;7E2000;22FF           ;meta sprite offsets (2298-22FF unused?)
+    ;7E2300;ADFF           ;meta sprite definitions (A712-ADFF unused?)
+    ;7EAE00;AE7F           ;palette for bosses?
+    ;7EAE80;AFFF           ;unused?
+    ;7EB000;EFFF           ;tile array, indexes into tile shape array
+    _7EF000 = $7EF000;F0FF ;tile shape array
+    ;7EF100;F2FF           ;snes sprite data
+    ;7EF300;F31F           ;also sprite related
+    ;7EF400;F5FF?          ;palette (and/or DMA) related?
+    ;7EF600;F6BF           ;unused?
+    ;7EF6C0;FFFF           ;screen IDs?
 
-    ;7E2000                 ;meta sprite offsets
-    ;7E2300                 ;meta sprite definitions
-    ;7EB000;$EFFF           ;tile array, indexes into tile shape array
-    _7EF000 = $7EF000;$F0FF ;tile shape array
-    ;$7EF100;$F2FF          ;snes sprite data
-    ;$7EF300;$F31F          ;also sprite related
-    ;$7EF400;$F5FF?         ;palette (and/or DMA) related?
-    _7F9000 = $7F9000       ;gfx layer related
+    _7F9000 = $7F9000      ;gfx layer related
 }
