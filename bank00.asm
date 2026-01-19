@@ -1123,8 +1123,8 @@ menu:
     db "SHOW RNG", -1
     db -1
 
-.show_pos_settings: dw -1, .off, .on, -1
-.show_rng_settings: dw -1, .off, .state, .counter, -1
+.show_pos_settings: dw .off, .on
+.show_rng_settings: dw .off, .state, .counter
 
 .off:     db "OFF", -1
 .on:      db "ON", -1
@@ -1132,6 +1132,10 @@ menu:
 .counter: db "COUNTER", -1
 
 cleartable
+
+.count:
+    db 2 ;show pos
+    db 3 ;show rng
 } 
 
 { ;A300 - A308

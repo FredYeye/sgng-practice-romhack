@@ -156,12 +156,6 @@
     ;$1FEF
     ;$1FF0;1FFF unused?
 
-    struct ram $1FF0;$1FFF
-        .cursor_pos: skip 1
-        .flags: skip 1
-        .rng_counter: skip 2
-    endstruct
-
     ;7E2000;22FF           ;meta sprite offsets (2298-22FF unused?)
     ;7E2300;ADFF           ;meta sprite definitions (A712-ADFF unused?)
     ;7EAE00;AE7F           ;palette for bosses?
@@ -175,4 +169,16 @@
     ;7EF6C0;FFFF           ;screen IDs?
 
     _7F9000 = $7F9000      ;gfx layer related
+}
+
+{
+    struct ram $1FF0;1FFF
+        .cursor_pos: skip 1
+        .flags: skip 1
+        .rng_counter: skip 2
+    endstruct
+
+    struct extram $7EAE80;AFFF
+        .menu_idx: skip 2
+    endstruct
 }
