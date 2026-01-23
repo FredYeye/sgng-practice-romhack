@@ -49,9 +49,9 @@ entry: ;emulated mode (code entry)
     ldy $02F3
     lda $02F5
 
-    ldx #$E000
+    ldx #$E010
 .8157:
-    stz $1FFF,X
+    stz $1FEF,X
     dex : bne .8157
 
     ldx #$1FD7
