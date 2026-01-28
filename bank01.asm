@@ -568,10 +568,7 @@ call_rng: ;a8 x-
     asl $0000 : rol $0001
     clc : lda $0000         : adc.w rng_state : sta.w rng_state
           lda.w rng_state+1 : adc $0001       : sta.w rng_state+1
-    pla
-    clc
-    adc.w rng_state+1
-    sta.w rng_state+1
+    pla : clc : adc.w rng_state+1 : sta.w rng_state+1
     !A16 : inc.w ram.rng_counter : !A8
     rtl
 }
@@ -6112,7 +6109,7 @@ _01B14B: ;a8 x8
     jsr setup_pause_menu
 .B17A:
     jsr run_custom_menu : !AX8
-    lda #$01 : jsl _01A717_A728
+    lda #$01 : jsl _01A717_suspend_handler
     lda.w p1_button_press+1 ;unpause check
     bit #!start
     beq .B17A
