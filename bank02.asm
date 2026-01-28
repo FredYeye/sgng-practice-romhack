@@ -173,7 +173,7 @@ _0280CB:
 { ;80E9 - 810C
 _0280E9: ;a8 x8
     ldx.b obj.type
-    dec.w obj_type_count,X ;decrease type count
+    dec.w obj_type_count,X
 .80EE: ;a8 x-
     stz.b obj.active
     stz $2C
@@ -463,7 +463,7 @@ _02821B: ;a8 x8
     jsr (.thing_object_offsets,X)
 .828E:
     !A16
-    clc : tdc : adc.w #!obj_size : tcd
+    clc : tdc : adc.w #obj.ext.len : tcd
     clc : lda.w !obj_arthur.pos_y+1 : adc $14D8 : sta $14DA
     !A8
     inc $02C6
@@ -1912,7 +1912,7 @@ _029139:
 }
 
 { ;96E9 - 96FD
-_0296E9:
+_0296E9: ;only used by eagler
     jsr _02FA37_FA6D
     lda $02C3
     clc

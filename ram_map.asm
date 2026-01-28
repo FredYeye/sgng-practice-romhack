@@ -1,49 +1,74 @@
 { ;ram map
-    ;4E: 24 bytes * 7, handlers? potentially something else interleaved?
-    ;54: offset to _01FF00 function jump table
-    ;related functions: _01A6AB, nmi_837D
 
-    ;                   $0276 flags? appears to be the start of this section
+    ;$0030;0031 irq pointer? unused?
+    ;$004C;004D ?
 
+    struct handler 0 ;24 bytes
+        .base:         skip 0
+
+        .state:        skip 1 ;similar to obj active field? C:init 2:pause 1:?
+        .timer:        skip 1 ;timer?
+        .stack_reg:    skip 2 ;current top of the stack
+        .stack_id:     skip 2 ;(const) offset to handler's associated stack
+        .fn_id:        skip 1 ;which FF00 function to call
+        .init_param:   skip 0
+        .memory:       skip 17
+
+        .len:          skip 0
+    endstruct
+
+    handler_start = $004E;00F5 ;7 * 24 bytes
+    !handler_offset = handler_start+handler ;for accessing the struct with $4E as base offset
+
+    struct stack $00F6;0275 ;8 stacks * 48 bytes
+        .bottom: skip 47
+        .top:    skip 1
+    endstruct
+
+    ;                   $0276 flags?
     ;                   $0278 game state?
-
     money_bag_count   = $027A
     difficulty_base   = $027B
     difficulty        = $027C
-    shot_buttons      = $027D ;2 bytes
-    jump_buttons      = $027F ;2 bytes
-    rng_state         = $0289 ;2 bytes
+    shot_buttons      = $027D;027E
+    jump_buttons      = $027F;0280
+    rng_state         = $0289;028A
+    ;                   $028B;028C ;unused?
     stage             = $028D
     checkpoint        = $028F
     continues         = $0290
     loop              = $0291
     ;                   $0292 ;related to "ready go"?
-    score             = $0293 ;0293-029A (8 bytes)
-    extend_threshhold = $029B ;029B-029E (4 bytes)
+    score             = $0293;029A
+    extend_threshhold = $029B;029E
     extend_counter    = $02A3
     extra_lives       = $02A4
-    checkpoint_x_pos  = $02A5
+    checkpoint_x_pos  = $02A5;02A6
     timer_minutes     = $02A7
     timer_tens        = $02A8
     timer_seconds     = $02A9
     timer_ticks       = $02AA
     ;02AB unused
 
-    current_weapon_stored = $02AD
-    arthur_state_stored   = $02AE
-    upgrade_state_stored  = $02AF ;arthur face or plume
-    shield_state_stored   = $02B0 ;stores shield status for stage transitions and transformations
-    shield_type_stored    = $02B1
-    existing_weapon_type  = $02B3
+    current_weapon_stored  = $02AD
+    arthur_state_stored    = $02AE
+    upgrade_state_stored   = $02AF ;arthur face or plume
+    shield_state_stored    = $02B0 ;stores shield status for stage transitions and transformations
+    shield_type_stored     = $02B1
+    existing_weapon_type   = $02B3
 
-    p1_button_hold  = $02B7 ;2 bytes
-    p2_button_hold  = $02B9 ;2 bytes
-    p1_button_press = $02BB ;2 bytes
-    p2_button_press = $02BD ;2 bytes
-    shot_hold       = $02BF ;1 byte
-    jump_hold       = $02C0 ;1 byte
-    shot_press      = $02C1 ;1 byte
-    jump_press      = $02C2 ;1 byte
+    current_handler_offset = $02B4 
+    handler_loop_count     = $02B5
+    ;02B6 handler/nmi related bool?
+
+    p1_button_hold         = $02B7;02B8
+    p2_button_hold         = $02B9;02BA
+    p1_button_press        = $02BB;02BC
+    p2_button_press        = $02BD;02BE
+    shot_hold              = $02BF
+    jump_hold              = $02C0
+    shot_press             = $02C1
+    jump_press             = $02C2
 
     ;02C3 inc every... "work frame" done? ie, no inc on lag frames
     ;02C4 inc on every video frame? regardless of lag frames
@@ -55,7 +80,8 @@
     ;02F7: indexes into 2F8, writes. increased after sfx is added
     ;02F8 - 317: sound queue of sorts
 
-    ; $0318 layer 3 VRAM offset?
+    ;$0318;0319 layer 3 VRAM offset?
+    ;$031A;031B layer 3 size
 
     layer3_needs_update = $0323
 
@@ -76,10 +102,11 @@
 
     ;13D1 ;active object count lists? create struct here maybe 
 
+    ;$13E1;13F0
     slot_list_objects = $13F1;142E ;list of 16 bit indices for slot_objects
     slot_list_weapons = $142F;1442
-    open_object_slots = $1443
-    open_weapon_slots = $1445
+    open_object_slots = $1443;1444
+    open_weapon_slots = $1445;1446
     open_magic_slots  = $1447
     ;$1448 2 bytes
 
@@ -91,7 +118,7 @@
     jump_state                   = $14BC ;name? 1:double jump 2:double jump + shot
     ; = $14BE
     ; = $14C3
-    current_cage                 = $14C4 ;0:outside 1:first cage 2:second cage
+    current_cage                 = $14C4;14C5 ;0:outside 1:first cage 2:second cage
     double_jump_state            = $14C6
     skip_double_jump_boost       = $14C7
     knife_rapid_timer            = $14C8
@@ -103,7 +130,7 @@
     weapon_current               = $14D3
     jump_type                    = $14DC ;jump type based on transform status
     transform_armor_state_stored = $14DD
-    transform_timer              = $14DE ;2 bytes
+    transform_timer              = $14DE;14DF
     ;is_casting_magic             = $14E3
     ;is_casting_magic2            = $14E4 ;what is this? magic sound related...?
     weapon_cooldown              = $14EC
@@ -112,18 +139,37 @@
     frozen_counter               = $14F3
     ; $14F8 related to the bowgun magic
     ; $14F9 ;some kind of "exiting top of ladder" bool/counter
+    ; $14FA-14FF unused?
 
-    camera_x = $15DC ;3 bytes
-    camera_y = $15E0 ;3 bytes
+    struct palette_cycle 0 ;14 bytes
+        .base: skip 0
 
-    screen_boundary_left = $1A7D
+        .unk: skip 5
+        .timer: skip 1
+        .unk2: skip 8
 
-    obj_type_count = $1A9A ;array counting active objects, per type. figure out length
+        .len: skip 0
+    endstruct
+
+    palette_cycle_start = $1500;1561 ;7 * 14 bytes
+
+    ;$1562;15A1 ;4 * 16 bytes
+    ;$1562;19A3 ;3 * 0x0156 bytes
+    camera_x = $15DC;15DF
+    camera_y = $15E0;15E3
+
+    screen_boundary_left = $1A7D;1A7E
+
+    obj_type_count = $1A9A;1B99 ;array counting active objects per type
+
+    static_obj_count_per_chunk = $1B9A;1C99 ;array of pre-placed obj counts per 32 px X or Y chunk
+    ;1C9A;1D99 ;obj related static array
+    ;1D9A;1E99 ;obj spawn param list?
 
     bat_count = $1EBE ;todo: also used by samael
-    zombie_previous_x_spawn = $1ED8
+    zombie_previous_x_spawn = $1ED8;1ED9
 
-    ; $1EE8 ;distance from left screen edge arthur needs to reach to scroll the screen, 2 bytes
+    ; $1EE8;1EE9 ;distance from left screen edge arthur needs to reach to scroll the screen
 
     ; $1F2F bool
 
@@ -142,6 +188,10 @@
 
     ;$1FAD used by cockatrice_head2
     ;$1FAF used by icicle spawner / other stage 5 things
+
+    ;$1FCB;1FD1 ;stored handler state while armor is being picked up (1FCB goes unused)
+    ;$1FD2;1FD3 camera x/y direction selector for ? (1FD3 written to but not used)
+
     ;$1FD8 unused?
 
     struct options $1FD9;1FDD
@@ -164,11 +214,15 @@
     _7EF000 = $7EF000;F0FF ;tile shape array
     ;7EF100;F2FF           ;snes sprite data
     ;7EF300;F31F           ;also sprite related
+    ;7EF320;F3FF           ;unused?
     ;7EF400;F5FF?          ;palette (and/or DMA) related?
     ;7EF600;F6BF           ;unused?
     ;7EF6C0;FFFF           ;screen IDs?
 
+    ;7F tentative map
+    ;7F0000;7FFF ;decompression buffer (7F00-7FFF unused?)
     _7F9000 = $7F9000      ;gfx layer related
+    ;7FA000;FFFF ;decompression? (F940-FFFF unused?)
 }
 
 {

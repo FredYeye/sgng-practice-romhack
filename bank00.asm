@@ -25,8 +25,7 @@ entry: ;emulated mode (code entry)
     clc
     xce
     !X16
-    ldx #$0275
-    txs
+    ldx #stack[7].top : txs
     !X8
     lda #$8F : sta.w INIDISP
     ldx #$0D
@@ -69,21 +68,18 @@ entry: ;emulated mode (code entry)
     ldy #$90
     ldx #$0C
 .817F:
-    lda _00A309+0,X : sta $0052,Y
-    lda _00A309+1,X : sta $0053,Y
-    sec
-    tya
-    sbc #$18
-    tay
+    lda.w stack_offsets+0,X : sta.w !handler_offset.stack_id+0,Y
+    lda.w stack_offsets+1,X : sta.w !handler_offset.stack_id+1,Y
+    sec : tya : sbc.b #handler.len : tay
     dex #2 : bpl .817F
 
     lda #$C3 : sta.w rng_state
     lda #$01 : sta.w rng_state+1
     lda.b #irq    : sta $0030
     lda.b #irq>>8 : sta $0031
-    stz $0000
-    lda #$80 : sta $0001
-    lda #$06 : sta $0002
+    stz $0000 ;lowest byte of spc_code_start address
+    lda.b #spc_code_start>>8  : sta $0001
+    lda.b #spc_code_start>>16 : sta $0002
     !A16
     lda $02F3
     cmp #$3901
@@ -212,19 +208,16 @@ nmi: ;a- x-
 
     ldx #$A8
 .837D:
-    lda $0036,X
+    lda.w !handler_offset[-1].state,X
     cmp #$01
     bne +
 
-    dec $0037,X
+    dec.w !handler_offset[-1].timer,X
     bne +
 
-    lda #$04 : sta $0036,X
+    lda #$04 : sta.w !handler_offset[-1].state,X
 +:
-    sec
-    txa
-    sbc #$18
-    tax
+    sec : txa : sbc.b #handler.len : tax
     bne .837D
 
     jsr _00853D
@@ -266,7 +259,7 @@ _0083C2:
     beq _0083C2
 
     phb
-    lda #$09 : pha : plb
+    lda.b #bank09>>16 : pha : plb
     phd
     !A16 : lda.w #!obj_objects.base : tcd : !A8
     lda #$1F : sta $0036
@@ -1143,9 +1136,9 @@ org $00A300 : _00A300: dl $7EF400, $7F9E00, $7F9800
 }
 
 { ;A309 - A316
-_00A309:
-    ;values to be transferred to the stack register
-    dw $0125, $0155, $0185, $01B5, $01E5, $0215, $0245
+stack_offsets:
+    dw stack[0].top, stack[1].top, stack[2].top, stack[3].top
+    dw stack[4].top, stack[5].top, stack[6].top
 }
 
 { ;A317 - A34C
@@ -1460,7 +1453,7 @@ extend_table: db $04, $07, $08
 }
 
 { ;A7E6 - A7F1
-_01A7E6: ;unused
+_00A7E6: ;unused
     dw $0000, $FFE0
     dw $0000, $0000
     dw $FFB8, $0000
@@ -1971,7 +1964,7 @@ _00B440:
 }
 
 { ;B4FE - B52D
-_01B4FE:
+_00B4FE:
     ;stage, checkpoint, timer
     db $00, $00 : dw $018D
     db $01, $02 : dw $02AC
@@ -2186,7 +2179,7 @@ _00B76D:
 }
 
 { ;B7A5 - B7D4
-_01B7A5:
+_00B7A5:
 
 .B7A5: db $FF, $00, $04, $FF, $08, $10, $14, $FF, $0C, $18, $1C, $FF, $FF, $FF, $FF, $FF
 
@@ -2531,18 +2524,18 @@ _00BAE6:
 }
 
 { ;BB0E - BB15
-_01BB0E:
+_00BB0E:
 
 .BB0E: db $03, $04, $04, $03
 .BB12: db $32, $31, $31, $32
 }
 
 { ;BB16 - BB19
-_01BB16: db $32, $31, $31, $32
+_00BB16: db $32, $31, $31, $32
 }
 
 { ;BB1A - BB21
-_01BB1A: dw $FFC0, $0040
+_00BB1A: dw $FFC0, $0040
 
 .BB1E: dw $0006, $FFFA
 }
@@ -2558,8 +2551,8 @@ _00BB22: ;bowgun
     db $01, $01, $01
 
 .BB2E:
-    dw !obj_objects.base+!obj_size*0, !obj_objects.base+!obj_size*1, !obj_objects.base+!obj_size*2
-    dw !obj_objects.base+!obj_size*0, !obj_objects.base+!obj_size*1, !obj_objects.base+!obj_size*2
+    dw !obj_objects.base+obj.ext.len*0, !obj_objects.base+obj.ext.len*1, !obj_objects.base+obj.ext.len*2
+    dw !obj_objects.base+obj.ext.len*0, !obj_objects.base+obj.ext.len*1, !obj_objects.base+obj.ext.len*2
 
 .BB3A:
     db $1C, $1E, $00
@@ -2601,7 +2594,7 @@ _00BC00:
 }
 
 { ;BC08 -
-_01BC08:
+_00BC08:
 
 .BC08: dw $0000, $4000
 .BC0C: dw $FFF9, $0007
@@ -3810,7 +3803,7 @@ db $40, $80, $C0 ;unused?
 }
 
 { ;CDD7 - CE80
-_01CDD7:
+_00CDD7:
 
 .CDD7: dw offset(.CDE1, .CDE1), offset(.CDE1, .CE01), offset(.CDE1, .CE21), offset(.CDE1, .CE41), offset(.CDE1, .CE61)
 
